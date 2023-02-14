@@ -66,8 +66,8 @@ func openChatGPT() {
 }
 
 func help() {
-	fmt.Println("Information about the chatgpt command")
-	fmt.Println("Usage: chatgpt [options]")
+	fmt.Println("Information about the chatgpt-cli command")
+	fmt.Println("Usage: chatgpt-cli [options]")
 	fmt.Println("Options:")
 	flag.PrintDefaults()
 }

@@ -6,10 +6,10 @@ Small command to open ChatGPT in your browser. It's useful for people who want t
 *Only works with .bashrc based shells.*
 
 ```
-chatgpt --help
+chatgpt-cli --help
 
 Information about the chatgpt command
-Usage: chatgpt [options]
+Usage: chatgpt-cli [options]
 Options:
   -browser string
         Opens ChatGPT in the specified browser

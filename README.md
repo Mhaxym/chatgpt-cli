@@ -2,7 +2,7 @@
 Small command to open ChatGPT in your browser. It's useful for people who want to avoid some clicks.
 
 ## Installation
-To install the command, you need to have Go installed. Then, run the following command:
+To install the command, you need to have [Go installed](https://go.dev/doc/install). Then, run the following command:
 
 ```
 go install github.com/Mhaxym/chatgpt-cli@latest

@@ -13,41 +13,46 @@ var ALLOWED_BROWSERS = map[string]bool{
 	"firefox":       true,
 	"brave":         true,
 	"chromium":      true,
-	"google-chrome": true,
 	"brave-browser": true,
 	"safari":        true,
 }
 var DEFAULT_BROWSER = os.Getenv("CHATGPT_DEFAULT_BROWSER")
 
+var FLAGS struct {
+	Browser           string
+	ListBrowsers      bool
+	SetDefaultBrowser string
+	ConfigFile        string
+	Help              bool
+}
+
 func main() {
 
-	browserPtr := flag.String("browser", "", "Opens ChatGPT in the specified browser")
-	browserListPtr := flag.Bool("list-browsers", false, "Lists the supported browsers")
-	setDefaultBrowserPtr := flag.String("set-default-browser", "", "Sets the default browser as a variable in the .bashrc file named CHATGPT_DEFAULT_BROWSER")
-	helpPtr := flag.Bool("help", false, "Shows the help message")
+	flag.StringVar(&FLAGS.Browser, "browser", "", "Opens ChatGPT in the specified browser")
+	flag.BoolVar(&FLAGS.ListBrowsers, "list-browsers", false, "Lists the supported browsers")
+	flag.StringVar(&FLAGS.SetDefaultBrowser, "set-default-browser", "", "Sets the default browser as a variable in the .bashrc file named CHATGPT_DEFAULT_BROWSER")
+	flag.StringVar(&FLAGS.ConfigFile, "config-file", "bashrc", "If your shell environment is not bash, please specify the config file path (e.g. zshrc)\nThis file will be used to set the CHATGPT_DEFAULT_BROWSER variable.\nOnly use this flag with the --set-default-browser flag.")
+	flag.BoolVar(&FLAGS.Help, "help", false, "Shows the help message")
+
 	flag.Parse()
 
-	if *helpPtr {
+	if FLAGS.Help {
 		help()
 		return
 	}
 
-	if *browserListPtr {
+	if FLAGS.ListBrowsers {
 		supportedBrowsers()
 		return
 	}
 
-	if *setDefaultBrowserPtr != "" {
-		setDefaultBrowser(setDefaultBrowserPtr)
+	if FLAGS.SetDefaultBrowser != "" {
+		setDefaultBrowser(&FLAGS.SetDefaultBrowser)
 		return
 	}
 
-	if *browserPtr != "" {
-		if !ALLOWED_BROWSERS[*browserPtr] {
-			fmt.Printf("Browser %s not supported", *browserPtr)
-			return
-		}
-		DEFAULT_BROWSER = *browserPtr
+	if FLAGS.Browser != "" {
+		overrideBrowser()
 	}
 
 	openChatGPT()
@@ -61,7 +66,14 @@ func openChatGPT() {
 	}
 	fmt.Println("Starting ChatGPT in ", DEFAULT_BROWSER)
 	url := "https://chat.openai.com/chat"
-	cmd := exec.Command(DEFAULT_BROWSER, url)
+
+	var cmd *exec.Cmd = nil
+	_, err := exec.LookPath(DEFAULT_BROWSER)
+	if err != nil {
+		cmd = exec.Command("open", "-a", DEFAULT_BROWSER, url)
+	} else {
+		cmd = exec.Command(DEFAULT_BROWSER, url)
+	}
 	cmd.Start()
 }
 
@@ -79,6 +91,14 @@ func supportedBrowsers() {
 	}
 }
 
+func overrideBrowser() {
+	if !ALLOWED_BROWSERS[FLAGS.Browser] {
+		fmt.Printf("Browser %s not supported", FLAGS.Browser)
+		return
+	}
+	DEFAULT_BROWSER = FLAGS.Browser
+}
+
 func setDefaultBrowser(defaultBrowser *string) {
 	if *defaultBrowser != "" {
 		if !ALLOWED_BROWSERS[*defaultBrowser] {
@@ -90,8 +110,8 @@ func setDefaultBrowser(defaultBrowser *string) {
 			panic(err)
 		}
 
-		bashrc := os.Getenv("HOME") + "/.bashrc"
-		f, err := os.OpenFile(bashrc, os.O_RDWR, 0600)
+		configFile := os.Getenv("HOME") + "/." + FLAGS.ConfigFile
+		f, err := os.OpenFile(configFile, os.O_RDWR, 0600)
 		if err != nil {
 			panic(err)
 		}
